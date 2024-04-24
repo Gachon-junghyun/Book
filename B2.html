@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>단어 표시 프로그램</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        textarea, #wordDisplay {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 50vh;
+            padding: 10px;
+        }
+        #wordDisplay {
+            height: 50vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            background-color: #f0f0f0;
+            transition: transform 0.5s ease;
+            cursor: pointer;
+        }
+        #controls {
+            padding: 10px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        select, input[type="text"], input[type="color"] {
+            margin: 5px;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <textarea id="inputText" placeholder="여기에 단어를 입력하세요."></textarea>
+    <div id="controls">
+        <div id="sec_pre">sec :</div>
+        <!-- 시간 조절 슬라이더 추가 -->
+        <div id="sliderContainer">
+            <input type="range" id="timeSlider" min="1" max="10" value="1" step="1">
+            <span id="sliderValue">1초</span>
+        </div>
+
+        <input type="text" id="sec" required minlength="1" maxlength="4" size="10">
+        <input type="file" id="pdfInput" accept=".pdf">
+        <button id="startButton">시작하기</button>
+        <button id="pauseButton">일시정지</button>
+        <button id="resumeButton">재개</button>
+        <select id="fontSize">
+            <option value="16px">16px</option>
+            <option value="24px" selected>24px</option>
+            <option value="32px">32px</option>
+        </select>
+        <input type="color" id="fontColor" value="#000000">
+    </div>
+    <div id="wordDisplay"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.js"></script>
+    <script>
+        document.getElementById('pdfInput').addEventListener('change', handlePdfUpload);
+
+        function handlePdfUpload(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            if (file.type !== 'application/pdf') {
+                alert('PDF 파일을 업로드해주세요.');
+                return;
+            }
+
+            reader.onload = function(e) {
+                const pdfText = e.target.result;
+
+                pdfjsLib.getDocument({ data: pdfText }).promise.then(function(pdf) {
+                    pdf.getPage(1).then(function(page) {
+                        page.getTextContent().then(function(textContent) {
+                            const pdfWords = textContent.items.map(item => item.str);
+                            displayWords(pdfWords);
+                        });
+                    });
+                });
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function displayWords(words) {
+            const wordDisplay = document.getElementById('inputText');
+            wordDisplay.innerText = words.join(' ');
+        }
+
+        const startButton = document.getElementById('startButton');
+        const pauseButton = document.getElementById('pauseButton');
+        const resumeButton = document.getElementById('resumeButton');
+        const wordDisplay = document.getElementById('wordDisplay');
+
+        document.getElementById('timeSlider').addEventListener('input', updateTimeValue);
+
+        let intervalId = null;
+        let isPaused = false;
+        let isUp = false;
+        let i = 0;
+
+        function showWords() {
+            let inputText = document.getElementById('inputText').value;
+            let words = inputText.split(/\s+/);
+            let second = Number(document.getElementById('sec').value) || 1000;
+            document.getElementById('sec_pre').innerText = words.length * second / 1000 + "초";
+
+
+            clearInterval(intervalId);
+
+            intervalId = setInterval(function () {
+                if (!isPaused && i < words.length) {
+                    wordDisplay.innerText = words[i++];
+
+                }
+                if (i >= words.length) {
+                    clearInterval(intervalId);
+                }
+            }, second);
+
+        }
+
+        function updateTimeValue() {
+            const slider = document.getElementById('timeSlider');
+            const sliderValueDisplay = document.getElementById('sliderValue');
+            const secInput = document.getElementById('sec');
+
+            const timeValue = slider.value * 100;
+            sliderValueDisplay.textContent = timeValue + '밀리초';
+            secInput.value = timeValue;
+
+            showWords();
+        }
+
+        window.onload = function() {
+            updateTimeValue();
+        };
+
+        function startWords() {
+
+            i = 0;
+            showWords();
+
+        }
+
+        function pauseWords() {
+            isPaused = true;
+        }
+
+        function resumeWords() {
+            isPaused = false;
+        }
+
+        function updateDisplayOptions() {
+            const fontSize = document.getElementById('fontSize').value;
+            const fontColor = document.getElementById('fontColor').value;
+            wordDisplay.style.fontSize = fontSize;
+            wordDisplay.style.color = fontColor;
+        }
+
+        function toggleView() {
+            wordDisplay.style.transform = isUp ? 'translateY(0)' : 'translateY(-100%)';
+            isUp = !isUp;
+        }
+
+        startButton.addEventListener('click', showWords);
+        pauseButton.addEventListener('click', pauseWords);
+        resumeButton.addEventListener('click', resumeWords);
+        document.getElementById('fontSize').addEventListener('change', updateDisplayOptions);
+        document.getElementById('fontColor').addEventListener('input', updateDisplayOptions);
+        wordDisplay.addEventListener('click', toggleView);
+    </script>
+</body>
+</html>
