@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파일 진행 상태 확인</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        .file-item {
+            border: 1px solid #ddd;
+            margin-top: 8px;
+            padding: 10px;
+            background-color: #fff;
+            cursor: pointer;
+        }
+        .file-item:hover {
+            background-color: #f9f9f9;
+        }
+        .file-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .file-name {
+            font-weight: bold;
+        }
+        .progress {
+            color: #555;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button onclick="reloadFiles()">새로 불러오기</button>
+        <div id="fileList">
+            <!-- 여기에 자바스크립트로 파일 목록을 동적으로 추가합니다 -->
+        </div>
+    </div>
+
+    <script>
+        function reloadFiles() {
+            // 서버에서 파일 목록을 불러오는 함수를 여기에 구현합니다.
+            // 이 예제에서는 더미 데이터를 사용합니다.
+            
+            
+            const xhr = new XMLHttpRequest() //객체 인스턴스 생성
+
+            function connect(){
+                xhr.onreadystatechange = reply();
+                xhr.open("GET", "/jbground/ajax/vo.do");
+                xhr.send();
+            }
+
+            function reply(){
+                if(xhr.readyState === 4){
+                    if(xhr.status === 200){
+                        console.log(xhr.response);
+                        const obj = JSON.parse(xhr.response);
+                        console.log(obj);
+                    }
+                }
+            }
+            
+            
+            const files = [
+                { name: 'example1.pdf', progress: '10%' },
+                { name: 'example2.txt', progress: '45%' }
+            ];
+
+            const fileListContainer = document.getElementById('fileList');
+            fileListContainer.innerHTML = ''; // 목록을 초기화
+
+            files.forEach(file => {
+                const fileElement = document.createElement('div');
+                fileElement.className = 'file-item';
+                fileElement.innerHTML = `
+                    <div class="file-info">
+                        <span class="file-name">${file.name}</span>
+                        <span class="progress">${file.progress}</span>
+                    </div>
+                `;
+                fileListContainer.appendChild(fileElement);
+            });
+        }
+
+        // 페이지 로딩 시 파일 목록을 자동으로 불러옵니다.
+        window.onload = reloadFiles;
+    </script>
+</body>
+</html>
