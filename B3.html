@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Document Display and Control</title>
+<style>
+  body, html {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    height: 100vh; /* 전체 높이를 화면에 맞춤 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  #controls {
+    margin: 20px 0;
+  }
+  button {
+    padding: 15px 30px; /* 모바일에서 더 크게 조정 */
+    font-size: 18px; /* 폰트 크기 조정 */
+    margin: 0 10px; /* 버튼 간 간격 조정 */
+  }
+  #speedControl {
+    width: 80%; /* 너비 조정 */
+    margin: 20px auto; /* 자동 가운데 정렬 */
+  }
+  #wordDisplay {
+    font-size: 5vh; /* 화면 높이에 비례하는 폰트 크기 */
+    color: blue;
+  }
+  #currentSentence, #nextSentence {
+    font-size: 4vh;
+  }
+</style>
+</head>
+<body>
+<div id="currentSentence">This is the previous sentence.</div>
+<div id="wordDisplay">Word appears here</div>
+<div id="nextSentence">This is the next sentence.</div>
+
+<div id="controls">
+  <button onclick="previousWord()">Previous</button>
+  <button onclick="playPause()">Play/Pause</button>
+  <button onclick="nextWord()">Next</button>
+</div>
+
+<label for="speedControl">Adjust speed:</label>
+<input type="range" id="speedControl" min="200" max="2000" step="100" value="1000">
+
+<script>
+  var words = ["This", "is", "a", "sample", "text", "to", "display", "words", "sequentially."];
+  var index = 0;
+  var playing = false;
+  var displayInterval = null;
+
+  function updateWordDisplay() {
+    if (index < words.length) {
+      document.getElementById("wordDisplay").textContent = words[index];
+    }
+  }
+
+  function playPause() {
+    if (playing) {
+      clearInterval(displayInterval);
+      playing = false;
+    } else {
+      displayInterval = setInterval(function() {
+        if (index < words.length) {
+          updateWordDisplay();
+          index++;
+        } else {
+          clearInterval(displayInterval);
+          playing = false;
+        }
+      }, parseInt(document.getElementById("speedControl").value));
+      playing = true;
+    }
+  }
+
+  function nextWord() {
+    if (index < words.length - 1) {
+      index++;
+      updateWordDisplay();
+    }
+  }
+
+  function previousWord() {
+    if (index > 0) {
+      index--;
+      updateWordDisplay();
+    }
+  }
+
+  document.getElementById("speedControl").addEventListener("change", function() {
+    if (playing) {
+      clearInterval(displayInterval);
+      displayInterval = setInterval(function() {
+        if (index < words.length) {
+          updateWordDisplay();
+          index++;
+        } else {
+          clearInterval(displayInterval);
+          playing = false;
+        }
+      }, parseInt(this.value));
+    }
+  });
+
+  updateWordDisplay(); // 초기 단어 표시
+</script>
+</body>
+</html>
