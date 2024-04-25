@@ -30,7 +30,28 @@
   #wordDisplay {
     font-size: 5vh; /* 화면 높이에 비례하는 폰트 크기 */
     color: blue;
+    
+    margin: 20px;
+
+    
+    /*    display: inline-block; */
+    font-size: 24px; /* 기본 글자 크기 설정 */
+    opacity: 1; /* 처음에는 글자가 보이지 않음  1로 보임으로 수정*/
+    animation: fadeInOut 1s 1; /* 애니메이션 적용, 3초 동안 무한 반복 */
+    
   }
+  @keyframes fadeInOut {
+    0%, 100% {
+      
+      transform: scale(0.9); /* 글자가 50% 크기에서 시작 */
+    }
+    50% {
+      
+      transform: scale(1.1); /* 글자가 150% 크기로 커졌다가 다시 작아짐 */
+    }
+  }
+
+
   #currentSentence, #nextSentence {
     font-size: 4vh;
   }
@@ -58,7 +79,17 @@
 
   function updateWordDisplay() {
     if (index < words.length) {
-      document.getElementById("wordDisplay").textContent = words[index];
+      var element = document.getElementById("wordDisplay");
+      element.textContent = words[index];
+
+           // 애니메이션 재설정
+      element.style.animation = 'none';
+
+      // 브라우저가 스타일 변경을 처리하도록 강제로 리플로우 발생
+      element.offsetHeight; // 이 코드가 리플로우를 유발
+      
+      element.style.animation = "fadeInOut 2s 1";
+      
     }
   }
 
