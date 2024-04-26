@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대시보드</title>
+</head>
+<body>
+    <h1>Welcome, {{ name }}!</h1>
+    <h2>Your PDFs:</h2>
+    <ul>
+        {% for pdf in pdfs %}
+        <li>{{ pdf.name }} - 진행률: {{ pdf.progress }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
