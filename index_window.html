@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Draggable Windows</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        html {
+            background-color: #EBEEF2;
+        }
+        .draggable-window {
+            width: 500px;
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            background-color: #A5A1A6;
+            resize: both;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .window-header {
+            cursor: move;
+            background-color: #403E3F;
+            color: #EBEEF2;
+            padding: 10px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .window-header .close-btn {
+            cursor: pointer;
+            color: #EBEEF2;
+            font-size: 1.2rem;
+        }
+        .window-body {
+            flex: 1;
+            padding: 15px;
+            background-color: #777E8C;
+            color: #EBEEF2;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-container {
+            flex: 3;
+            background-color: #5C5C5C;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .stock-list {
+            flex: 1;
+            background-color: #5C5C5C;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-y: auto;
+        }
+        .stock-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(64, 62, 63, 0.8);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 20px;
+            border-radius: 20px;
+        }
+        .bottom-nav a {
+            color: #EBEEF2;
+            text-decoration: none;
+            text-align: center;
+            margin: 0 15px;
+        }
+        .bottom-nav a:hover {
+            color: #FFFFFF;
+        }
+        .bottom-nav i {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        .draggable-window form {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .draggable-window form .form-group {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="nav-color navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="#"><i class="fas fa-home"></i> Portfolio</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fas fa-chart-line"></i> 리스크 관리</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fas fa-cog"></i> 설정</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fas fa-wallet"></i> 계좌</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fas fa-user"></i> Profile</a>
+                </li>
+            </ul>
+            <button class="btn btn-primary" data-toggle="modal" data-target="#loginModal">Login</button>
+        </div>
+    </nav>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="bottom-nav">
+        <a href="#" onclick="createDraggableWindow('investment')">
+            <i class="fas fa-coins"></i>
+            투자 관리
+        </a>
+        <a href="#" onclick="createDraggableWindow('chart')">
+            <i class="fas fa-chart-pie"></i>
+            차트
+        </a>
+        <a href="#" onclick="createDraggableWindow('report')">
+            <i class="fas fa-file-alt"></i>
+            리포트
+        </a>
+        <a href="#" onclick="createDraggableWindow('notes')">
+            <i class="fas fa-sticky-note"></i>
+            노트
+        </a>
+    </div>
+
+    <script>
+        let zIndexCounter = 1; // Track the current z-index value
+
+        function bringToFront(element) {
+            zIndexCounter++;
+            element.style.zIndex = zIndexCounter;
+        }
+
+        // Define templates for different window types
+        const windowTemplates = {
+            investment: {
+                title: "Investment Management",
+                body: `
+                    <form id="investmentForm">
+                        <div class="form-group">
+                            <label for="assetName">자산 이름</label>
+                            <input type="text" class="form-control" id="assetName" placeholder="자산 이름 입력">
+                        </div>
+                        <div class="form-group">
+                            <label for="assetPercentage">투자 비율 (%)</label>
+                            <input type="number" class="form-control" id="assetPercentage" placeholder="투자 비율 입력">
+                        </div>
+                        <button type="button" class="btn btn-primary">추가</button>
+                    </form>
+                `
+            },
+            chart: {
+                title: "Chart Window",
+                body: `
+                    <div style="display: flex; gap: 10px; height: 100%;">
+                        <div class="chart-container" style="flex: 3;">
+                            <p>차트를 선택한 종목으로 업데이트합니다.</p>
+                        </div>
+                        <div class="stock-list" style="flex: 1;">
+                            <h5 style="text-align: center;">종목 리스트</h5>
+                            <ul>
+                                <li data-ticker="AAPL">Apple (AAPL)</li>
+                                <li data-ticker="GOOGL">Google (GOOGL)</li>
+                                <li data-ticker="TSLA">Tesla (TSLA)</li>
+                                <li data-ticker="MSFT">Microsoft (MSFT)</li>
+                                <li data-ticker="AMZN">Amazon (AMZN)</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+            report: {
+                title: "Report Window",
+                body: `
+                    <div>
+                        <h5>경제 지표</h5>
+                        <p>GDP, 고용지수 등 최신 데이터를 여기에 표시합니다.</p>
+                    </div>
+                `
+            },
+            notes: {
+                title: "Notes",
+                body: `
+                    <textarea class="form-control" rows="10" placeholder="내용을 입력하세요"></textarea>
+                    <button type="button" class="btn btn-success mt-2">저장</button>
+                `
+            }
+        };
+
+        // Enable dragging functionality
+        function enableDrag(event, element) {
+            bringToFront(element); // Ensure the clicked element is in front
+            let offsetX = event.clientX - element.getBoundingClientRect().left;
+            let offsetY = event.clientY - element.getBoundingClientRect().top;
+            let isDragging = true;
+
+            document.addEventListener("mousemove", moveHandler);
+            document.addEventListener("mouseup", stopDrag);
+
+            function moveHandler(e) {
+                if (!isDragging) return;
+                element.style.left = `${e.clientX - offsetX}px`;
+                element.style.top = `${e.clientY - offsetY}px`;
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener("mousemove", moveHandler);
+                document.removeEventListener("mouseup", stopDrag);
+            }
+        }
+
+        // Create a new draggable window
+        function createDraggableWindow(type) {
+            if (!windowTemplates[type]) {
+                console.error("Invalid window type");
+                return;
+            }
+
+            const { title, body } = windowTemplates[type];
+
+            const newWindow = document.createElement('div');
+            newWindow.classList.add('draggable-window');
+            newWindow.style.top = '100px';
+            newWindow.style.left = '100px';
+
+            newWindow.innerHTML = `
+                <div class="window-header" onmousedown="enableDrag(event, this.parentNode)">
+                    ${title}
+                    <span class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</span>
+                </div>
+                <div class="window-body">${body}</div>
+            `;
+
+            document.body.appendChild(newWindow);
+        }
+    </script>
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">Login</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" class="form-control" id="username" placeholder="Enter username">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" id="password" placeholder="Enter password">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
